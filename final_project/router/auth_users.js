@@ -6,11 +6,29 @@ const regd_users = express.Router();
 let users = [];
 
 const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
+    // Filter the users array for any user with the same username
+    let userswithsamename = users.filter((user) => {
+        return user.username === username;
+    });
+    // Return true if any user with the same username is found, otherwise false
+    if (userswithsamename.length > 0) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 const authenticatedUser = (username,password)=>{ //returns boolean
 //write code to check if username and password match the one we have in records.
+    let authentic_users = users.filter((user) => {
+        return (user.username === username && user.password === password);
+    });
+
+    if (authentic_users.length > 0){
+        return true;
+    }else{
+        return false;
+    }
 }
 
 //only registered users can login
