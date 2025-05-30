@@ -49,7 +49,7 @@ regd_users.post("/login", (req,res) => {
             req.session.authorization = {
                 accessToken, username
             }
-            return res.status(200).send("User successfully logged in");
+            return res.status(200).json({message: "User successfully logged in", "token": accessToken});
         } else {
             return res.status(208).json({ message: "Invalid Login. Check username and password" });
         }
@@ -59,24 +59,39 @@ regd_users.post("/login", (req,res) => {
 });
 
 // Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-    // Verify user is logged in and has valid access token
-    if(req.session.authorization){
-        let token = req.session.authorization['accessToken'];
+regd_users.put("/auth/review/:isbn", (req, res) => {    
+    let isbn = req.params.isbn
+    let review = req.query.review
+    let username = req.session.authorization.username
 
-        // Verify JWT token
-        jwt.verify(token, "access", (err, user) => {
-            if (!err) {
-                req.user = user;
-                next(); // Proceed to the next middleware
-            } else {
-                return res.status(403).json({ message: "User not authenticated" });
-            }
-        });
-    }else {
-        return res.status(403).json({ message: "User not logged in" });
+    // Check if any review was supplied
+    if(!review){
+        return res.status(400).json({message:"No review text supplied"})
     }
+
+    if(books[isbn]){        
+        if(!books[isbn].reviews){ // if no review collection init'd
+            books[isbn].reviews = {};
+        }
+        books[isbn].reviews[username] = review
+        return res.status(200).json({
+            message: "Review submitted successfully",
+            book: books[isbn]
+        })
+    }
+    return res.status(404).json({message:"Book not found"})
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    let bookNum = req.params.isbn;
+    let user = req.session.authorization.username;
+    let filteredReview = books[bookNum].reviews.filter((review) => 
+        review.username != user);
+    books[bookNum].reviews = filteredReview;
+    return res.send(user + "'s Review Removed");
+  });
+  
+  
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
