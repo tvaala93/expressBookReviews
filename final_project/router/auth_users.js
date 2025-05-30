@@ -68,7 +68,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     if(!review){
         return res.status(400).json({message:"No review text supplied"})
     }
-
+    console.log("Checkpoint")
     if(books[isbn]){        
         if(!books[isbn].reviews){ // if no review collection init'd
             books[isbn].reviews = {};
@@ -79,16 +79,19 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
             book: books[isbn]
         })
     }
-    return res.status(404).json({message:"Book not found"})
+    return res.status(404).json({message:"Book not found","books":books})
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
-    let bookNum = req.params.isbn;
+    let isbn = req.params.isbn;
     let user = req.session.authorization.username;
-    let filteredReview = books[bookNum].reviews.filter((review) => 
-        review.username != user);
-    books[bookNum].reviews = filteredReview;
-    return res.send(user + "'s Review Removed");
+    //let filteredReview = books[isbn].reviews.filter((review) => {
+    //    review.username != user});
+    if (books[isbn].reviews[user]){
+        delete books[isbn].reviews[user]
+        return res.send(user + "'s Review Removed");
+    }
+    return res.status(409).json({message:"There is no review to delete for this user"})    
   });
   
   
