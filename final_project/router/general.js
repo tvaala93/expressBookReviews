@@ -89,14 +89,12 @@ public_users.get('/author/:author',function (req, res) {
                     authorsnamed.push(book);
                 }
             }
-
             if (authorsnamed.length > 0) {                
                 resolve(authorsnamed)
             }
             else{                
                 reject(`Unable to find Author: ${author}`)
             }
-
         }, 3000);
     })
 
@@ -137,7 +135,6 @@ public_users.get('/title/:title',function (req, res) {
     }).catch((error) => {
         res.status(404).json({message:error})
     })
-
 });
 
 //  Get book review
