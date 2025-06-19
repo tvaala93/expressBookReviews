@@ -32,15 +32,15 @@ public_users.get('/',function (req, res) {
     //Creating a promise method. The promise will get resolved when timer times out after 3 seconds.
     let book_promise = new Promise((resolve,reject) => {
         setTimeout(() => {
-            resolve("Promise resolved")
+            resolve(books)            
         }, 3000);
     });
 
     //Call the promise and wait for it to be resolved and then print a message.
-    book_promise.then(() => {
-        return res.status(200).json({books})
+    book_promise.then((book_list) => {
+        res.status(200).send(JSON.stringify(book_list, null, 4))
     }).catch((error) => {
-        return res.status(500).json({error: "Ther is an error..."})
+        res.status(500).json({error: "There is an error..."})
     })
 
 });
@@ -56,44 +56,55 @@ public_users.get('/isbn/:isbn',function (req, res) {
 
     let isbn_promise = new Promise((resolve,reject) => {
         setTimeout(() => {
-            resolve("Promise resolved")
+            const book = books[isbn]
+            if(book){
+                resolve(book)
+            }
+            else{
+                reject("Book not found")
+            }
         }, 3000);
     })
 
-    isbn_promise.then(() => {
-        if (books[isbn]){
-            return res.send(JSON.stringify(books[isbn],null,4));
-        }
-        return res.status(404).json({message:`Unable to find ISBN: ${isbn}`})        
+    isbn_promise.then((book) => {        
+        res.status(200).send(JSON.stringify(book))
+    }).catch((error) => {
+        res.status(404).json({message : error})
     })
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-    const author = req.params.author;
+    const author = req.params.author;    
     let author_promise = new Promise((resolve,reject) => {
         setTimeout(() => {
-            resolve("Promise resolved")
+            // Filter the books object for any book with the author
+            //let book_keys = Object.keys(books);
+            //res.send(book_keys);
+            let authorsnamed = [];            
+
+            for(let i in books){     
+                let book = books[i]           
+                if(book.author === author){
+                    authorsnamed.push(book);
+                }
+            }
+
+            if (authorsnamed.length > 0) {                
+                resolve(authorsnamed)
+            }
+            else{                
+                reject(`Unable to find Author: ${author}`)
+            }
+
         }, 3000);
     })
-    // Filter the books object for any book with the author
-    let book_keys = Object.keys(books);
-    //res.send(book_keys);
-    let authorsnamed = {};
 
-    for(let i = 0; i < book_keys.length; i++){
-        
-        if(books[book_keys[i]]["author"] === author){
-            authorsnamed[book_keys[i]] = books[book_keys[i]];            
-        }
-    }    
-
-    // Return true if any user with the same username is found, otherwise false
-    if (Object.keys(authorsnamed).length > 0) {
-        res.send(JSON.stringify(authorsnamed,null,4))
-    } else {
-        res.status(404).json({message:`Unable to find Author: ${author}`})
-    }
+    author_promise.then((books_by_author) => {
+        res.status(200).send(books_by_author)
+    }).catch((error) => {
+        res.status(404).json({message: error})        
+    });
 });
 
 // Get all books based on title
@@ -103,21 +114,30 @@ public_users.get('/title/:title',function (req, res) {
     // Filter the books object for any book with the author
     let book_keys = Object.keys(books);
     //res.send(book_keys);
-    let titlesnamed = {};
+    let titlesnamed = [];
+    let title_promise = new Promise((resolve,reject) => {
+        setTimeout(() => {
+            for(let i in books){
+                let book = books[i]
+                if (book.title === title){
+                    titlesnamed.push(book)
+                }
+            }
 
-    for(let i = 0; i < book_keys.length; i++){
-        
-        if(books[book_keys[i]]["title"] === title){
-            titlesnamed[book_keys[i]] = books[book_keys[i]];            
-        }
-    }    
+            if(titlesnamed.length > 0){
+                resolve(titlesnamed)
+            }else{
+                reject(`Unable to find Title: ${title}`)
+            }
+        }, 3000);
+    })
 
-    // Return true if any user with the same username is found, otherwise false
-    if (Object.keys(titlesnamed).length > 0) {
-        res.send(JSON.stringify(titlesnamed,null,4))
-    } else {
-        res.status(404).json({message:`Unable to find Title: ${title}`})
-    }
+    title_promise.then((titles) =>{
+        res.status(200).send(titles)
+    }).catch((error) => {
+        res.status(404).json({message:error})
+    })
+
 });
 
 //  Get book review
